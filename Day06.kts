@@ -58,67 +58,104 @@ points.forEach {
     maxCol = maxOf(maxCol, it[0])
     maxRow = maxOf(maxRow, it[1])
 }
-val map = Array(maxRow+1, { IntArray(maxCol+1) })
-val protected = Array(maxRow+1, { BooleanArray(maxCol+1) })
-var queue = ArrayDeque<IntArray>()
-var nextQueue = ArrayDeque<IntArray>()
-for ((idx, value) in points.withIndex()) {
-    map[value[1]][value[0]] = idx + 1
-    queue.add(intArrayOf(value[1], value[0]))
-}
-while (!queue.isEmpty() || !nextQueue.isEmpty()) {
-    val curr = queue.poll()
-    walk(curr[0], curr[1])
-    if (queue.isEmpty()) {
-        protect()
-        queue = nextQueue
-        nextQueue = ArrayDeque<IntArray>()
+val map = Array(maxRow+1, { Array(maxCol+1, { Pair(EMPTY, maxRow * maxCol) }) })
 
+for ((idx, value) in points.withIndex()) {
+    var dist = 2
+    val localMap = Array(maxRow+1, { IntArray(maxCol+1) })
+    var queue = ArrayDeque<IntArray>()
+    var nextQueue = ArrayDeque<IntArray>()
+    queue.add(intArrayOf(value[1], value[0]))
+    localMap[value[1]][value[0]] = 1
+    while (!queue.isEmpty() || !nextQueue.isEmpty()) {
+        val curr = queue.poll()
+        walk(curr[0], curr[1], localMap, dist, nextQueue)
+        if (queue.isEmpty()) {
+            dist++
+            queue = nextQueue
+            nextQueue = ArrayDeque<IntArray>()
+
+        }
     }
-}
-fun protect() {
     for (i in 0..maxRow) {
         for (j in 0..maxCol) {
-            if (map[i][j] > EMPTY) protected[i][j] = true
+            if (map[i][j].second > localMap[i][j]) {
+                map[i][j] = Pair(idx+1, localMap[i][j])
+            } else if (map[i][j].second == localMap[i][j]) {
+                map[i][j] = Pair(SAME_DIST, localMap[i][j])
+            }
         }
     }
 }
-fun walk(row: Int, col: Int) {
-    println("walk $row, $col, ${map[row][col]}")
-    if (map[row][col] <= EMPTY) return
+
+fun walk(row: Int, col: Int, map: Array<IntArray>, dist: Int, nextQueue: Queue<IntArray>) {
     for (direction in directions) {
         val newRow = row + direction[0]
         val newCol = col + direction[1]
         if (newRow < 0 || newCol < 0 || newRow > maxRow || newCol > maxCol) continue
-        if (map[newRow][newCol] == EMPTY) {
-            map[newRow][newCol] = map[row][col]
-            println("add $newRow, $newCol, ${map[newRow][newCol]}")
+        if (map[newRow][newCol] == 0) {
+            map[newRow][newCol] = dist
             nextQueue.add(intArrayOf(newRow, newCol))
-        }
-        else if (map[newRow][newCol] != map[row][col] && !protected[newRow][newCol]) {
-            map[newRow][newCol] = SAME_DIST
-            println("same $newRow, $newCol, ${map[newRow][newCol]}")
         }
     }
 }
 val counter = mutableMapOf<Int, Int>()
-map.forEach {
-    it
+map.map { it.map { it.first } }
+        .forEach { it
             .filter { it > EMPTY }
             .forEach {
-    counter.putIfAbsent(it, 0)
-    counter[it] = counter[it]!! + 1
+                counter.putIfAbsent(it, 0)
+                counter[it] = counter[it]!! + 1
 } }
-map.forEach {
-    println(it.fold("") {acc, o -> acc + o + " "})
+for (i in 0..maxRow) {
+    counter.remove(map[i][0].first)
+    counter.remove(map[i][maxCol].first)
+}
+for (j in 0..maxCol) {
+    counter.remove(map[0][j].first)
+    counter.remove(map[maxRow][j].first)
 }
 println(counter.maxBy { it.value }!!.value)
 /*
 Part 2
 
-Amidst the chaos, you notice that exactly one claim doesn't overlap by even a single square inch of fabric with any other claim. If you can somehow draw attention to it, maybe the Elves will be able to make Santa's suit after all!
+On the other hand, if the coordinates are safe, maybe the best you can do is try to find a region near as many coordinates as possible.
 
-For example, in the claims above, only claim 3 is intact after all claims are made.
+For example, suppose you want the sum of the Manhattan distance to all of the coordinates to be less than 32. For each location, add up the distances to all of the given coordinates; if the total of those distances is less than 32, that location is within the desired region. Using the same coordinates as above, the resulting region looks like this:
 
-What is the ID of the only claim that doesn't overlap?
+..........
+.A........
+..........
+...###..C.
+..#D###...
+..###E#...
+.B.###....
+..........
+..........
+........F.
+In particular, consider the highlighted location 4,3 located at the top middle of the region. Its calculation is as follows, where abs() is the absolute value function:
+
+Distance to coordinate A: abs(4-1) + abs(3-1) =  5
+Distance to coordinate B: abs(4-1) + abs(3-6) =  6
+Distance to coordinate C: abs(4-8) + abs(3-3) =  4
+Distance to coordinate D: abs(4-3) + abs(3-4) =  2
+Distance to coordinate E: abs(4-5) + abs(3-5) =  3
+Distance to coordinate F: abs(4-8) + abs(3-9) = 10
+Total distance: 5 + 6 + 4 + 2 + 3 + 10 = 30
+Because the total distance to all coordinates (30) is less than 32, the location is within the region.
+
+This region, which also includes coordinates D and E, has a total size of 16.
+
+Your actual region will need to be much larger than this example, though, instead including all locations with a total distance of less than 10000.
+
+What is the size of the region containing all locations which have a total distance to all given coordinates of less than 10000?
 */
+fun totalDist(row: Int, col: Int) = points.fold(0) {acc, it -> acc + Math.abs(row - it[1]) + Math.abs(col - it[0])}
+var ans = 0
+for (i in 0..maxRow) {
+    for (j in 0..maxCol) {
+        if (totalDist(i, j) < 10000) ans++
+    }
+}
+
+println(ans)
