@@ -4,6 +4,20 @@ import java.lang.Exception
 // input processing
 val inputs = File("inputs/day07.txt").readLines()
 
+val precedes = mutableMapOf<Char, MutableList<Char>>()
+val blocked = mutableMapOf<Char, MutableList<Char>>()
+val tasks = mutableSetOf<Char>()
+inputs.forEach {
+    val details = it.split(" ")
+    val a = details[1].toCharArray()[0]
+    val b = details[7].toCharArray()[0]
+    tasks.add(a)
+    tasks.add(b)
+    precedes.putIfAbsent(a, mutableListOf())
+    blocked.putIfAbsent(b, mutableListOf())
+    precedes[a]!!.add(b)
+    blocked[b]!!.add(a)
+}
 /*
 Part 1
 
@@ -37,47 +51,33 @@ So, in this example, the correct order is CABDFE.
 In what order should the steps in your instructions be completed?
  */
 
-val precedes = mutableMapOf<Char, MutableList<Char>>()
-val blocked = mutableMapOf<Char, MutableList<Char>>()
-val tasks = mutableSetOf<Char>()
-inputs.forEach {
-    val details = it.split(" ")
-    val a = details[1].toCharArray()[0]
-    val b = details[7].toCharArray()[0]
-    tasks.add(a)
-    tasks.add(b)
-    precedes.putIfAbsent(a, mutableListOf())
-    blocked.putIfAbsent(b, mutableListOf())
-    precedes[a]!!.add(b)
-    blocked[b]!!.add(a)
-}
-var ans = ""
-var queue = mutableListOf<Char>()
-for (task in tasks) {
-    if (!blocked.containsKey(task)) {
-        queue.add(task)
-    }
-}
-queue = queue.sorted().reversed().toMutableList()
-while (!queue.isEmpty()) {
-    val start = queue.last()
-    ans += start
-    tasks.remove(start)
-    queue = queue.dropLast(1).toMutableList()
-    if (!precedes.containsKey(start)) continue
-    for (c in precedes[start]!!) {
-        var notBlocked = true
-        for (d in blocked[c]!!) {
-            if (tasks.contains(d)) {
-                notBlocked = false
-                break
-            }
-        }
-        if (notBlocked) queue.add(c)
-    }
-    queue = queue.sorted().reversed().toMutableList()
-}
-println(ans)
+//var ans = ""
+//var queue = mutableListOf<Char>()
+//for (task in tasks) {
+//    if (!blocked.containsKey(task)) {
+//        queue.add(task)
+//    }
+//}
+//queue = queue.sorted().reversed().toMutableList()
+//while (!queue.isEmpty()) {
+//    val start = queue.last()
+//    ans += start
+//    tasks.remove(start)
+//    queue = queue.dropLast(1).toMutableList()
+//    if (!precedes.containsKey(start)) continue
+//    for (c in precedes[start]!!) {
+//        var notBlocked = true
+//        for (d in blocked[c]!!) {
+//            if (tasks.contains(d)) {
+//                notBlocked = false
+//                break
+//            }
+//        }
+//        if (notBlocked) queue.add(c)
+//    }
+//    queue = queue.sorted().reversed().toMutableList()
+//}
+//println(ans)
 /*
 Part 2
 
@@ -112,4 +112,57 @@ In this example, it would take 15 seconds for two workers to complete these step
 
 With 5 workers and the 60+ second step durations described above, how long will it take to complete all of the steps?
 */
-val workers = IntArray(5)
+val workers = mutableListOf<Pair<Int, Int>>()
+val workerNum = 2
+for (i in 0 until workerNum) {
+    workers.add(Pair(i, 0))
+}
+var ans = 0
+var queue = mutableListOf<Char>()
+var startTime = mutableMapOf<Char, Int>()
+for (task in tasks) {
+    if (!blocked.containsKey(task)) {
+        queue.add(task)
+        startTime[task] = 0
+    }
+}
+//queue = queue.sorted().reversed().toMutableList()
+while (!queue.isEmpty()) {
+    val start = queue.last()
+    var queued = false
+    var nextStart = 0
+    workers.sortBy { it.second }
+    for (i in 0 until workerNum) {
+        if (workers[i].second >= startTime[start]!!) {
+            nextStart = workers[i].second + start.toInt() - 64
+            workers[i] = Pair(workers[i].first, nextStart)
+            println("${workers[i].first} on $start until $nextStart")
+            queued = true
+            break
+        }
+    }
+    if (!queued) {
+        nextStart = startTime[start]!! + start.toInt() - 64
+        workers[0]= Pair(workers[0].first, nextStart)
+        println("0 on $start until $nextStart")
+    }
+    tasks.remove(start)
+    queue = queue.dropLast(1).toMutableList()
+    if (!precedes.containsKey(start)) continue
+    for (c in precedes[start]!!) {
+        var notBlocked = true
+        for (d in blocked[c]!!) {
+            if (tasks.contains(d)) {
+                notBlocked = false
+                break
+            }
+        }
+        if (notBlocked) {
+            queue.add(c)
+            startTime[c] = nextStart
+            println("$c start on $nextStart")
+        }
+    }
+    //queue = queue.sorted().reversed().toMutableList()
+}
+println(workers.map { it.second }.max())
