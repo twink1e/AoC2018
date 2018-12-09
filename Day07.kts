@@ -112,12 +112,7 @@ In this example, it would take 15 seconds for two workers to complete these step
 
 With 5 workers and the 60+ second step durations described above, how long will it take to complete all of the steps?
 */
-val workers = mutableListOf<Pair<Int, Int>>()
-val workerNum = 2
-for (i in 0 until workerNum) {
-    workers.add(Pair(i, 0))
-}
-var ans = 0
+val workers = IntArray(5)
 var queue = mutableListOf<Char>()
 var startTime = mutableMapOf<Char, Int>()
 for (task in tasks) {
@@ -126,32 +121,27 @@ for (task in tasks) {
         startTime[task] = 0
     }
 }
-//queue = queue.sorted().reversed().toMutableList()
+queue = queue.sorted().reversed().toMutableList()
 while (!queue.isEmpty()) {
     val start = queue.last()
-    var queued = false
-    var nextStart = 0
-    workers.sortBy { it.second }
-    for (i in 0 until workerNum) {
-        if (workers[i].second >= startTime[start]!!) {
-            nextStart = workers[i].second + start.toInt() - 64
-            workers[i] = Pair(workers[i].first, nextStart)
-            println("${workers[i].first} on $start until $nextStart")
-            queued = true
-            break
+    var nextStart = Int.MAX_VALUE
+    var assignee = 0
+    for (i in 0 until workers.count()) {
+        val temp = Math.max(workers[i], startTime[start]!!) + start.toInt() - 4
+        if (temp < nextStart) {
+            nextStart = temp
+            assignee = i
         }
     }
-    if (!queued) {
-        nextStart = startTime[start]!! + start.toInt() - 64
-        workers[0]= Pair(workers[0].first, nextStart)
-        println("0 on $start until $nextStart")
-    }
+    workers[assignee] = nextStart
+    println("$assignee on $start until $nextStart")
     tasks.remove(start)
     queue = queue.dropLast(1).toMutableList()
     if (!precedes.containsKey(start)) continue
     for (c in precedes[start]!!) {
         var notBlocked = true
         for (d in blocked[c]!!) {
+            startTime[c] = Math.max(nextStart, startTime[c]?:0)
             if (tasks.contains(d)) {
                 notBlocked = false
                 break
@@ -159,10 +149,9 @@ while (!queue.isEmpty()) {
         }
         if (notBlocked) {
             queue.add(c)
-            startTime[c] = nextStart
             println("$c start on $nextStart")
         }
     }
-    //queue = queue.sorted().reversed().toMutableList()
+    queue = queue.sorted().reversed().toMutableList()
 }
-println(workers.map { it.second }.max())
+println(workers.max()!!)
