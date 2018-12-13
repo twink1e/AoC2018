@@ -2,7 +2,7 @@ import java.io.File
 import kotlin.system.exitProcess
 
 // input processing
-val inputs = File("inputs/day131.txt").readLines()
+val inputs = File("inputs/day13.txt").readLines()
 val map = inputs.map { it.map { it }.toMutableList() }.toMutableList()
 val row = map.count()
 val col = map[0].count()
@@ -175,12 +175,8 @@ for (i in 0 until row)
             }
         }
 val ignore = mutableSetOf<Pair<Int, Int>>()
-var clashes = 0
-var x = 0
-var y = 0
 while (true) {
     ignore.clear()
-    clashes = 0
     for (i in 0 until row) {
         for (j in 0 until col) {
             if (map[i][j] in cars && !ignore.contains(Pair(i, j))) {
@@ -188,12 +184,18 @@ while (true) {
             }
            // print(map[i][j])
         }
-        println()
+        //println()
     }
-    println()
-    if (clashes == 0) {
-        println("$y,$x")
-        exitProcess(0)
+    //println()
+    if (map.fold(0) { acc, c -> acc + c.filter { it in cars }.count() } == 1) {
+        for (i in 0 until row) {
+            for (j in 0 until col) {
+                if (map[i][j] in cars) {
+                    println("$j,$i")
+                    exitProcess(0)
+                }
+            }
+        }
     }
 }
 
@@ -220,14 +222,13 @@ fun moveCar(row: Int, col: Int) {
         }
     }
     val nextChar = map[nextRow][nextCol]
-    println("$row, $col, $currentChar $nextRow, $nextCol, $nextChar")
+    //println("$row, $col, $currentChar $nextRow, $nextCol, $nextChar")
 
     if (nextChar in cars) {
-        clashes++
         map[row][col] = oldValues[Pair(row, col)]!!
-        println("set $row, $col, ${map[row][col]}")
+        //println("set $row, $col, ${map[row][col]}")
         map[nextRow][nextCol] = oldValues[Pair(nextRow, nextCol)]!!
-        println("set $nextRow, $nextCol, ${oldValues[Pair(nextRow, nextCol)]!!}")
+        //println("set $nextRow, $nextCol, ${oldValues[Pair(nextRow, nextCol)]!!}")
         return
     }
 
@@ -258,9 +259,9 @@ fun moveCar(row: Int, col: Int) {
         newNextChar = currentChar
     }
     map[row][col] = oldValues[Pair(row, col)]!!
-    println("set $row, $col, ${map[row][col]}")
+    //println("set $row, $col, ${map[row][col]}")
     map[nextRow][nextCol] = newNextChar
-    println("set $nextRow, $nextCol, $newNextChar")
+    //println("set $nextRow, $nextCol, $newNextChar")
     ignore.add(Pair(nextRow, nextCol))
 }
 
