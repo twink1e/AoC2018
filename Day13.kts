@@ -182,18 +182,19 @@ while (true) {
             if (map[i][j] in cars && !ignore.contains(Pair(i, j))) {
                 moveCar(i, j)
             }
-           // print(map[i][j])
         }
-        //println()
     }
-    //println()
     if (map.fold(0) { acc, c -> acc + c.filter { it in cars }.count() } == 1) {
-        for (i in 0 until row) {
-            for (j in 0 until col) {
-                if (map[i][j] in cars) {
-                    println("$j,$i")
-                    exitProcess(0)
-                }
+        findOnlyCar()
+    }
+}
+
+fun findOnlyCar() {
+    for (i in 0 until row) {
+        for (j in 0 until col) {
+            if (map[i][j] in cars) {
+                println("$j,$i")
+                exitProcess(0)
             }
         }
     }
@@ -222,13 +223,10 @@ fun moveCar(row: Int, col: Int) {
         }
     }
     val nextChar = map[nextRow][nextCol]
-    //println("$row, $col, $currentChar $nextRow, $nextCol, $nextChar")
 
     if (nextChar in cars) {
         map[row][col] = oldValues[Pair(row, col)]!!
-        //println("set $row, $col, ${map[row][col]}")
         map[nextRow][nextCol] = oldValues[Pair(nextRow, nextCol)]!!
-        //println("set $nextRow, $nextCol, ${oldValues[Pair(nextRow, nextCol)]!!}")
         return
     }
 
@@ -259,9 +257,7 @@ fun moveCar(row: Int, col: Int) {
         newNextChar = currentChar
     }
     map[row][col] = oldValues[Pair(row, col)]!!
-    //println("set $row, $col, ${map[row][col]}")
     map[nextRow][nextCol] = newNextChar
-    //println("set $nextRow, $nextCol, $newNextChar")
     ignore.add(Pair(nextRow, nextCol))
 }
 
