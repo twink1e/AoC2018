@@ -2,8 +2,8 @@ import java.io.File
 import kotlin.system.exitProcess
 
 // input processing
-val inputs = File("inputs/day13.txt").readLines()
-var map = inputs.map { it.map { it }.toMutableList() }.toMutableList()
+val inputs = File("inputs/day131.txt").readLines()
+val map = inputs.map { it.map { it }.toMutableList() }.toMutableList()
 val row = map.count()
 val col = map[0].count()
 /*
@@ -174,18 +174,27 @@ for (i in 0 until row)
                 else -> '|'
             }
         }
-var newMap = mutableListOf<MutableList<Char>>()
+val ignore = mutableSetOf<Pair<Int, Int>>()
+var clashes = 0
+var x = 0
+var y = 0
 while (true) {
-    newMap = map.map { it.map {it}.toMutableList() }.toMutableList()
+    ignore.clear()
+    clashes = 0
     for (i in 0 until row) {
         for (j in 0 until col) {
-            if (map[i][j] in cars) moveCar(i, j)
-            print(map[i][j])
+            if (map[i][j] in cars && !ignore.contains(Pair(i, j))) {
+                moveCar(i, j)
+            }
+           // print(map[i][j])
         }
         println()
     }
     println()
-    map = newMap
+    if (clashes == 0) {
+        println("$y,$x")
+        exitProcess(0)
+    }
 }
 
 fun moveCar(row: Int, col: Int) {
@@ -211,15 +220,19 @@ fun moveCar(row: Int, col: Int) {
         }
     }
     val nextChar = map[nextRow][nextCol]
-    //println("$row, $col, $currentChar $nextRow, $nextCol, $nextChar")
+    println("$row, $col, $currentChar $nextRow, $nextCol, $nextChar")
 
-    if (newMap[nextRow][nextCol] in cars) {
-        println("$nextCol,$nextRow")
-        exitProcess(0)
+    if (nextChar in cars) {
+        clashes++
+        map[row][col] = oldValues[Pair(row, col)]!!
+        println("set $row, $col, ${map[row][col]}")
+        map[nextRow][nextCol] = oldValues[Pair(nextRow, nextCol)]!!
+        println("set $nextRow, $nextCol, ${oldValues[Pair(nextRow, nextCol)]!!}")
+        return
     }
 
-    oldValues[Pair(nextRow, nextCol)] = map[nextRow][nextCol]
-    newMap[row][col] = oldValues[Pair(row, col)]!!
+    oldValues[Pair(nextRow, nextCol)] = nextChar
+ 
 
     var newNextChar: Char
     if (nextChar == '+') {
@@ -244,7 +257,11 @@ fun moveCar(row: Int, col: Int) {
         turns[Pair(nextRow, nextCol)] = turns[Pair(row, col)]!!
         newNextChar = currentChar
     }
-    newMap[nextRow][nextCol] = newNextChar
+    map[row][col] = oldValues[Pair(row, col)]!!
+    println("set $row, $col, ${map[row][col]}")
+    map[nextRow][nextCol] = newNextChar
+    println("set $nextRow, $nextCol, $newNextChar")
+    ignore.add(Pair(nextRow, nextCol))
 }
 
 fun turn(row: Int, col: Int, nextRow: Int, nextCol: Int): Char {
@@ -261,7 +278,6 @@ fun turn(row: Int, col: Int, nextRow: Int, nextCol: Int): Char {
 /*
 Part 2
 
-You realize that 20 generations aren't enough. After all, these plants will need to last another 1500 years to even reach your timeline, not to mention your future.
-
-After fifty billion (50000000000) generations, what is the sum of the numbers of all pots which contain a plant?*/
+What is the location of the last cart at the end of the first tick where it is the only cart left?
+*/
 
