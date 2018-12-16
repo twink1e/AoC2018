@@ -39,13 +39,6 @@ for (i in 0 until rowNum) {
 
 var rounds = 1
 val hurt = 3
-//for (ii in 0 until rowNum) {
-//    for (jj in 0 until colNum) {
-//        print(map[ii][jj])
-//    }
-//    println()
-//}
-//println()
 var elfPower = 12
 val elfCount = elfs.count()
 while(true) {
