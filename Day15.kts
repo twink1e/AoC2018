@@ -46,7 +46,8 @@ val hurt = 3
 //    println()
 //}
 //println()
-
+var elfPower = 12
+val elfCount = elfs.count()
 while(true) {
     ignore.clear()
     //println("================== Round $rounds ====================")
@@ -57,13 +58,6 @@ while(true) {
         }
     }
     rounds++
-    for (ii in 0 until rowNum) {
-        for (jj in 0 until colNum) {
-            print(map[ii][jj])
-        }
-        println()
-    }
-    println()
 }
 
 fun round(row: Int, col: Int, c: Char) {
@@ -78,8 +72,17 @@ fun move(row: Int, col: Int, c: Char): Pair<Int, Int> {
     val targets = if (c == 'E') goblins else elfs
     var minDist = Int.MAX_VALUE
     var distMap: Array<IntArray>? = null
-    for (t in targets) {
-        val d = reachable(row, col, t.row, t.col)
+    val squares = mutableListOf<Pair<Int, Int>>()
+     for (unit in targets) {
+        for (i in 0..3) {
+            val currRow = unit.row+rowDir[i]
+            val currCol = unit.col+colDir[i]
+            if (map[currRow][currCol] == '.') squares.add(Pair(currRow, currCol))
+        }
+    } 
+    squares.sortWith(compareBy({ it.first }, { it.second }))
+    for (t in squares) {
+        val d = reachable(row, col, t.first, t.second)
         if (d[row][col] < minDist) {
             minDist = d[row][col]
             distMap = d
@@ -124,20 +127,8 @@ fun reachable(fromRow: Int, fromCol: Int, toRow: Int, toCol: Int): Array<IntArra
 
     q.add(Pair(toRow, toCol))
     distMap[toRow][toCol] = 0
-    var reached = false
     while (!q.isEmpty() || !nextQ.isEmpty()) {
         if (q.isEmpty()) {
-            if (reached) {
-//                for (ii in 0 until rowNum) {
-//                    for (jj in 0 until colNum) {
-//                        print(distMap[ii][jj])
-//                        print(" ")
-//                    }
-//                    println()
-//                }
-//                println()
-                return distMap
-            }
             q = nextQ
             nextQ = LinkedList<Pair<Int, Int>>()
         }
@@ -147,11 +138,13 @@ fun reachable(fromRow: Int, fromCol: Int, toRow: Int, toCol: Int): Array<IntArra
         for (i in 0..3) {
             val newRow = curRow + rowDir[i]
             val newCol = curCol + colDir[i]
-            if ((newRow != fromRow || newCol != fromCol) && map[newRow][newCol] != '.' || distMap[newRow][newCol] != Int.MAX_VALUE) continue
-            distMap[newRow][newCol] = distMap[curRow][curCol] + 1
-            nextQ.add(Pair(newRow, newCol))
-            //println("$curRow, $curCol ${distMap[curRow][curCol]} add $newRow, $newCol ${map[newRow][newCol]} ${distMap[newRow][newCol]}")
-            if (newRow == fromRow && newCol == fromCol) reached = true
+            if (distMap[newRow][newCol] != Int.MAX_VALUE) continue
+            if (newRow == fromRow && newCol == fromCol || map[newRow][newCol] == '.') {
+                distMap[newRow][newCol] = distMap[curRow][curCol] + 1
+                nextQ.add(Pair(newRow, newCol))
+                //println("$curRow, $curCol ${distMap[curRow][curCol]} add $newRow, $newCol ${map[newRow][newCol]} ${distMap[newRow][newCol]}")
+                if (newRow == fromRow && newCol == fromCol) return distMap
+            }
         }
     }
  
@@ -179,11 +172,11 @@ fun attack(row: Int, col: Int, c: Char): Boolean {
     }
     if (attacked) {
         val target = getTarget(c, minRow!!, minCol!!)
-        target.life = target.life - hurt
+        target.life = target.life - if (c == 'G') hurt else elfPower
         if (target.life <= 0) {
             removeUnit(c, minRow, minCol)
         }
-        println("$row, $col $c attack $minRow, $minCol ${map[minRow][minCol]} life ${target.life}")
+        //println("$row, $col $c attack $minRow, $minCol ${map[minRow][minCol]} life ${target.life}")
     } else {
         //println("$row, $col $c no attack")
     }
@@ -211,7 +204,19 @@ fun getTarget(c: Char, row: Int, col: Int): Unit {
 fun getResult(): Int {
     var life = elfs.fold(0) { acc, unit -> acc + unit.life }
     life += goblins.fold(0) { acc, unit -> acc + unit.life }
-    println("$rounds $life")
+    printMap()
+    println("${rounds - 1} $life")
     println((rounds - 1) * life)
+    println(elfCount - elfs.count())
     exitProcess(0)
+}
+
+fun printMap() {
+    for (ii in 0 until rowNum) {
+        for (jj in 0 until colNum) {
+            print(map[ii][jj])
+        }
+        println()
+    }
+    println()
 }
