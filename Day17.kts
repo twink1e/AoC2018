@@ -33,8 +33,9 @@ val records = inputs.map {
     r[3] = v3
     r
 }
-
-val map = Array(maxY + 1, { CharArray(maxX + 1, { '.' } ) })
+val rowNum = maxY + 1
+val colNum = maxX + 1
+val map = Array(rowNum, { CharArray(colNum, { '.' } ) })
 map[0][500] = '+'
 for (r in records) {
     for (i in r[2]..r[3]) {
@@ -45,15 +46,73 @@ for (r in records) {
         }
     }
 }
+
+val source: Queue<Pair<Int, Int>> = LinkedList<Pair<Int, Int>>()
+source.add(Pair(0, 500))
+while(!source.isEmpty()) {
+    val curr = source.poll()
+    move(curr.first, curr.second)
+}
+
+fun move(row: Int, col: Int) {
+    val touch = goDown(row, col)
+    if (touch != null) {
+        for (p in spread(touch.first, touch.second)) source.add(p)
+    }
+}
+
+fun spread(r: Int, c: Int): List<Pair<Int, Int>> {
+    if (map[r][c] == '~') return emptyList()
+    var cLeft = c
+    var cRight = c
+    map[r][c] = '~'
+    while(map[r][cLeft - 1] != '#' && map[r+1][cLeft - 1] != '.' && map[r+1][cLeft - 1] != '|') {
+        cLeft--
+        map[r][cLeft] = '~'
+    }
+    while(map[r][cRight + 1] != '#' && map[r+1][cRight + 1] != '.' && map[r+1][cRight + 1] != '|') {
+        cRight++
+        map[r][cRight] = '~'
+    }
+    if (map[r][cLeft-1] == '#' && map[r][cRight+1] == '#') return spread(r-1, c)
+    val ans = mutableListOf<Pair<Int, Int>>()
+    if (map[r][cLeft-1] == '.') {
+        //for (i in cLeft-1..cRight) map[r][i] = '|'
+        map[r][cLeft-1] = '|'
+        ans.add(Pair(r, cLeft-1))
+    }
+    if (map[r][cRight+1] == '.') {
+        //for (i in cLeft..cRight+1) map[r][i] = '|'
+        map[r][cRight+1] = '|'
+        ans.add(Pair(r, cRight+1))
+    }
+    return ans
+}
+
+fun goDown(r: Int, c: Int): Pair<Int, Int>? {
+    var row = r
+    while(row+1 < rowNum && map[row+1][c] != '#'){
+            //&& map[row+1][c] != '~') {
+        map[row+1][c] = '|'
+        row++
+    }
+    if (row+1 == rowNum) return null
+    else return Pair(row, c)
+}
+
 printMap()
 
 fun printMap() {
-    for (i in 0..maxY) {
-        for (j in minX..maxX) {
+    var ans = 0
+
+    for (i in minY..maxY) {
+        for (j in (minX -2)..maxX) {
             print(map[i][j])
+            if (map[i][j] == '~' || map[i][j] == '|') ans++
         }
         println()
     }
+    println(ans)
 }
 fun updateX(v: Int) {
     minX = Math.min(minX, v)
