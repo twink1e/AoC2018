@@ -77,12 +77,12 @@ fun spread(r: Int, c: Int): List<Pair<Int, Int>> {
     if (map[r][cLeft-1] == '#' && map[r][cRight+1] == '#') return spread(r-1, c)
     val ans = mutableListOf<Pair<Int, Int>>()
     if (map[r][cLeft-1] == '.') {
-        //for (i in cLeft-1..cRight) map[r][i] = '|'
+        for (i in cLeft-1..cRight) map[r][i] = '|'
         map[r][cLeft-1] = '|'
         ans.add(Pair(r, cLeft-1))
     }
     if (map[r][cRight+1] == '.') {
-        //for (i in cLeft..cRight+1) map[r][i] = '|'
+        for (i in cLeft..cRight+1) map[r][i] = '|'
         map[r][cRight+1] = '|'
         ans.add(Pair(r, cRight+1))
     }
@@ -92,7 +92,6 @@ fun spread(r: Int, c: Int): List<Pair<Int, Int>> {
 fun goDown(r: Int, c: Int): Pair<Int, Int>? {
     var row = r
     while(row+1 < rowNum && map[row+1][c] != '#'){
-            //&& map[row+1][c] != '~') {
         map[row+1][c] = '|'
         row++
     }
@@ -113,6 +112,34 @@ fun printMap() {
         println()
     }
     println(ans)
+}
+
+count()
+fun count() {
+    var ans = 0
+    for (i in minY..maxY) {
+        var j = minX
+        var started = false
+        var idx = 0
+        while (j<= maxX) {
+            if (map[i][j] != '#') {
+                if (map[i][j] != '~') started = false
+                j++
+                continue
+            }
+            else if (started) {
+                ans += j-idx
+                idx = j+1
+            } else {
+                started = true
+                idx = j+1
+            }
+ 
+            j++
+        }
+    }
+    println(ans)
+    
 }
 fun updateX(v: Int) {
     minX = Math.min(minX, v)
